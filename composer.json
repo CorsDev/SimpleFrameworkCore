@@ -1,6 +1,7 @@
 {
     "name": "corsdev/simpleframework-core",
     "type": "library",
+    "version": "0.1.0",
     "autoload": {
         "psr-4": {
             "CorsDev\\SimpleFrameworkCore\\": "src/"
