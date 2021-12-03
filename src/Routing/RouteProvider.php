@@ -6,6 +6,7 @@ use Exception;
 use CorsDev\SimpleFrameworkCore\constants\HTTPStatusCodes;
 use CorsDev\SimpleFrameworkCore\Request\Request;
 use CorsDev\SimpleFrameworkCore\Response\Response;
+use JetBrains\PhpStorm\NoReturn;
 
 abstract class RouteProvider
 {
@@ -44,7 +45,7 @@ abstract class RouteProvider
     /**
      * @throws Exception
      */
-    public function handleRequest()
+    #[NoReturn] public function handleRequest(): void
     {
 
         $request = Request::current();
@@ -53,29 +54,35 @@ abstract class RouteProvider
         foreach ($this->routes as $route) {
 
             if ($request->matches($route)) {
-
-                $request->setPathParamsFromRoute($route);
-
-                $errors = $route->handler->validate($request);
-
-                if (!empty($errors)) {
-                    Response::make()->statusCode(HTTPStatusCodes::BAD_REQUEST)->jsonBody([
-                        'message' => HTTPStatusCodes::getMessageForCode(HTTPStatusCodes::BAD_REQUEST),
-                        'errors' => $errors
-                    ])->sendAndDie();
-                }
-
-                $response = $route->handler->handle($request);
-
-                $response?->sendAndDie();
-
-                Response::make()->sendAndDie();
-
+                $this->handleRequestWithRouteAndDie($request, $route);
             }
 
         }
 
         Response::makeNotFound()
             ->sendAndDie();
+    }
+
+    /**
+     * @throws Exception
+     */
+    #[NoReturn] private function handleRequestWithRouteAndDie(Request $request, Route $route): void
+    {
+        $request->setPathParamsFromRoute($route);
+
+        $errors = $route->handler->validate($request);
+
+        if (!empty($errors)) {
+            Response::make()->statusCode(HTTPStatusCodes::BAD_REQUEST)->jsonBody([
+                'message' => HTTPStatusCodes::getMessageForCode(HTTPStatusCodes::BAD_REQUEST),
+                'errors' => $errors
+            ])->sendAndDie();
+        }
+
+        $response = $route->handler->handle($request);
+
+        $response?->sendAndDie();
+
+        Response::make()->sendAndDie();
     }
 }
